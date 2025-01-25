@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import "./App.css";
+
+import ContactForm from "./ContactForm/ContactForm";
+import ContactList from "./ContactList/ContactList";
+import SearchBox from "./SearchBox/SearchBox";
+
+import contactsData from "./Contact/contactsData.json";
+import { useEffect, useState } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [contacts, setContacts] = useState(() => {
+    let savedContacts = window.localStorage.getItem("contacts");
+
+    if (savedContacts !== null) {
+      return JSON.parse(savedContacts);
+    }
+
+    return contactsData;
+  });
+
+  const [filter, setFilter] = useState(() => {
+    let savedFilter = window.localStorage.getItem("filter");
+
+    if (savedFilter !== null) {
+      return savedFilter;
+    }
+
+    return "";
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("contacts", JSON.stringify(contacts));
+  }, [contacts]);
+
+  useEffect(() => {
+    window.localStorage.setItem("filter", filter);
+  }, [filter]);
+
+  const addContact = (newContact) => {
+    setContacts((prevContacts) => {
+      return [...prevContacts, newContact];
+    });
+  };
+
+  const deleteContact = (contactId) => {
+    setContacts((prevContacts) => {
+      return prevContacts.filter((contact) => contact.id !== contactId);
+    });
+  };
+
+  const visibleContacts = contacts.filter((contact) =>
+    contact.name.toLowerCase().includes(filter.toLowerCase())
+  );
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <div>
+      <h1>Phonebook</h1>
+      <ContactForm onAdd={addContact} />
+      <SearchBox value={filter} onFilter={setFilter} contactsData={contacts} />
+      <ContactList contactsData={visibleContacts} onDelete={deleteContact} />
+    </div>
+  );
 }
 
-export default App
+export default App;
